@@ -1,21 +1,27 @@
-# Employee Records System
+# Employee Records System v2.0
 
-## Overview
-A cross-platform C++ application for managing employee records with binary file storage and report generation.
+## 📋 Overview
+Modern C++ application for managing employee records with binary file storage and report generation.
 
-## Features
-- **Creator.exe**: Create binary files with employee data
-- **Reporter.exe**: Generate formatted reports from binary files
-- **Main.exe**: Interactive main program
-- **Comprehensive Unit Tests**: 7 Google Test cases
+## ✨ Features
+- **Creator**: Create binary files with employee data
+- **Reporter**: Generate formatted reports with salary calculations
+- **Main**: Interactive program combining both tools
+- **Comprehensive Testing**: 7+ Google Test cases
+- **Modern C++**: C++17 features, RAII, exception safety
 
-## Requirements
+## 🏗️ Architecture
+- **FileHandler**: RAII-based file operations
+- **InputValidator**: Robust input validation
+- **ReportGenerator**: Flexible report formatting
+- **Employee**: Enhanced struct with methods
+
+## 📦 Requirements
 - CMake 3.14+
-- C++17 compatible compiler
-- Google Test (automatically downloaded)
+- C++17 compiler
+- Google Test (auto-downloaded)
 
-## Building
+## 🔧 Building
 ```bash
 chmod +x run_tests.sh
 ./run_tests.sh
-

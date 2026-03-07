@@ -1,132 +1,74 @@
-#include <iostream>
-#include <fstream>
-#include <string>
+﻿#include <iostream>
 #include <memory>
-#include <stdexcept>
+#include <vector>
 #include "employee.h"
+#include "FileHandler.h"
+#include "InputValidator.h"
 
-using std::cout;
-using std::cin;
-using std::cerr;
-using std::endl;
-using std::string;
-using std::ofstream;
-using std::make_unique;
+class EmployeeCreator {
+private:
+    std::vector<Employee> employees;
 
-static constexpr int MIN_HOURS = 1;
-static constexpr int MAX_HOURS = 168; 
-static constexpr int BUFFER_SIZE = 256;
+    Employee inputEmployee(int id) {
+        Employee emp;
+        emp.num = id;
 
-void clearInputStream() {
-    cin.clear();
-    cin.ignore(BUFFER_SIZE, '\n');
-}
+        std::cout << "\n--- Employee #" << id << " ---" << std::endl;
 
-int getValidatedInt(const string& prompt, int min, int max) {
-    int value;
-    while (true) {
-        cout << prompt;
-        if (cin >> value && value >= min && value <= max) {
-            clearInputStream();
-            return value;
+        std::string name = InputValidator::getName("Name: ");
+        emp.setName(name);
+
+        emp.hours = InputValidator::getDouble("Hours worked: ",
+            MIN_HOURS, MAX_HOURS);
+
+        return emp;
+    }
+
+public:
+    void createEmployees(int count) {
+        employees.clear();
+        employees.reserve(count);
+
+        for (int i = 1; i <= count; ++i) {
+            employees.push_back(inputEmployee(i));
         }
-        cerr << "Invalid input. Please enter a number between " 
-             << min << " and " << max << endl;
-        clearInputStream();
     }
-}
 
-double getValidatedDouble(const string& prompt, double min, double max) {
-    double value;
-    while (true) {
-        cout << prompt;
-        if (cin >> value && value >= min && value <= max) {
-            clearInputStream();
-            return value;
-        }
-        cerr << "Invalid input. Please enter a number between " 
-             << min << " and " << max << endl;
-        clearInputStream();
+    void saveToFile(const std::string& filename) {
+        FileHandler::writeBinaryFile(filename, employees);
+        std::cout << "\n✓ Successfully saved " << employees.size()
+            << " employees to " << filename << std::endl;
     }
-}
-
-string getValidatedName(const string& prompt) {
-    string name;
-    while (true) {
-        cout << prompt;
-        cin >> name;
-        clearInputStream();
-        
-        if (name.length() < MAX_NAME_LENGTH) {
-            return name;
-        }
-        cerr << "Name too long. Maximum " << (MAX_NAME_LENGTH - 1) 
-             << " characters." << endl;
-    }
-}
-
-Employee inputEmployee(int id) {
-    Employee emp{};
-    emp.num = id;
-    
-    cout << "\nEmployee #" << id << endl;
-    
-    string name = getValidatedName("Name (max 9 chars): ");
-    strncpy(emp.name, name.c_str(), MAX_NAME_LENGTH - 1);
-    emp.name[MAX_NAME_LENGTH - 1] = '\0';
-    
-    emp.hours = getValidatedDouble("Hours worked: ", MIN_HOURS, MAX_HOURS);
-    
-    return emp;
-}
-
-bool writeEmployeeToFile(ofstream& file, const Employee& emp) {
-    try {
-        file.write(reinterpret_cast<const char*>(&emp), sizeof(Employee));
-        return file.good();
-    } catch (const std::exception& e) {
-        cerr << "Error writing to file: " << e.what() << endl;
-        return false;
-    }
-}
+};
 
 int main(int argc, char* argv[]) {
     try {
-        string filename;
+        std::string filename;
         int recordCount;
 
         if (argc == 3) {
             filename = argv[1];
             recordCount = std::stoi(argv[2]);
-        } else {
-            cout << "=== Employee Data Creator ===" << endl;
-            cout << "Enter filename: ";
-            cin >> filename;
-            recordCount = getValidatedInt("Enter number of employees: ", 1, 1000);
+        }
+        else {
+            std::cout << "=== Employee Data Creator ===" << std::endl;
+            filename = InputValidator::getName("Enter filename: ");
+            recordCount = InputValidator::getInt("Number of employees: ",
+                1, MAX_EMPLOYEES);
         }
 
-        ofstream file(filename, std::ios::binary);
-        if (!file.is_open()) {
-            cerr << "Error: Cannot create file " << filename << endl;
-            return 1;
+        FileHandler::createDirectory("data");
+        if (filename.find('/') == std::string::npos) {
+            filename = "data/" + filename;
         }
 
-        cout << "\nEnter " << recordCount << " employees:" << endl;
-        
-        for (int i = 1; i <= recordCount; ++i) {
-            auto emp = inputEmployee(i);
-            
-            if (!writeEmployeeToFile(file, emp)) {
-                cerr << "Failed to write employee #" << i << endl;
-                return 1;
-            }
-        }
+        EmployeeCreator creator;
+        creator.createEmployees(recordCount);
+        creator.saveToFile(filename);
 
-        file.close();
-        cout << "\nBinary file created successfully: " << filename << endl;
-        
-    } catch (const std::exception& e) {
-        cerr << "Error: " << e.what() << endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 

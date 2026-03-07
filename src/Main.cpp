@@ -1,237 +1,106 @@
 #include <iostream>
-#include <string>
-#include <fstream>
 #include <cstdlib>
-#include <stdexcept>
-#include "employee.h"
+#include "FileHandler.h"
+#include "InputValidator.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-using std::cout;
-using std::cin;
-using std::cerr;
-using std::endl;
-using std::string;
-using std::ifstream;
-using std::to_string;
-
-static constexpr int MIN_RECORDS = 1;
-static constexpr int MAX_RECORDS = 1000;
-static constexpr double MIN_RATE = 0.0;
-static constexpr double MAX_RATE = 1000.0;
-
-void clearScreen() {
-    #ifdef _WIN32
-    system("cls");
-    #else
-    system("clear");
-    #endif
-}
-
-int getValidatedInt(const string& prompt, int min, int max) {
-    int value;
-    while (true) {
-        cout << prompt;
-        if (cin >> value && value >= min && value <= max) {
-            cin.ignore(256, '\n');
-            return value;
-        }
-        cerr << "Invalid input. Please enter a number between " 
-             << min << " and " << max << endl;
-        cin.clear();
-        cin.ignore(256, '\n');
+class ProcessLauncher {
+public:
+    static int runCreator(const std::string& filename, int count) {
+        std::cout << "\n=== Starting Creator ===" << std::endl;
+        std::string cmd = "./Creator.exe " + filename + " " + std::to_string(count);
+        return system(cmd.c_str());
     }
-}
 
-double getValidatedDouble(const string& prompt, double min, double max) {
-    double value;
-    while (true) {
-        cout << prompt;
-        if (cin >> value && value >= min && value <= max) {
-            cin.ignore(256, '\n');
-            return value;
-        }
-        cerr << "Invalid input. Please enter a number between " 
-             << min << " and " << max << endl;
-        cin.clear();
-        cin.ignore(256, '\n');
+    static int runReporter(const std::string& binFile,
+        const std::string& reportFile,
+        double rate) {
+        std::cout << "\n=== Starting Reporter ===" << std::endl;
+        std::string cmd = "./Reporter.exe " + binFile + " " +
+            reportFile + " " + std::to_string(rate);
+        return system(cmd.c_str());
     }
-}
+};
 
-void printBinaryFile(const string& filename) {
-    ifstream file(filename, std::ios::binary);
-    if (!file.is_open()) {
-        cerr << "Error: Cannot open binary file: " << filename << endl;
+void printFileContent(const std::string& filename) {
+    if (!FileHandler::fileExists(filename)) {
+        std::cerr << "File not found: " << filename << std::endl;
         return;
     }
-    
-    cout << "\n" << string(50, '=') << endl;
-    cout << "=== Binary File Contents: " << filename << " ===" << endl;
-    cout << string(50, '=') << endl;
-    
-    Employee emp;
-    int count = 0;
-    while (file.read(reinterpret_cast<char*>(&emp), sizeof(Employee))) {
-        cout << "Record #" << ++count << ":" << endl;
-        cout << "  ID:    " << emp.num << endl;
-        cout << "  Name:  " << emp.name << endl;
-        cout << "  Hours: " << emp.hours << endl;
-        cout << string(30, '-') << endl;
-    }
-    
-    if (count == 0) {
-        cout << "File is empty." << endl;
-    } else {
-        cout << "Total records: " << count << endl;
-    }
-    cout << string(50, '=') << "\n" << endl;
-}
 
-void printReportFile(const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "Error: Cannot open report file: " << filename << endl;
-        return;
-    }
-    
-    cout << "\n" << string(50, '=') << endl;
-    cout << "=== Report Contents: " << filename << " ===" << endl;
-    cout << string(50, '=') << endl;
-    
-    string line;
-    while (getline(file, line)) {
-        cout << line << endl;
-    }
-    cout << string(50, '=') << "\n" << endl;
-}
+    std::cout << "\n" << std::string(50, '=') << std::endl;
+    std::cout << "Contents of: " << filename << std::endl;
+    std::cout << std::string(50, '=') << std::endl;
 
-#ifdef _WIN32
-int runCreator(const string& filename, int recordCount) {
-    STARTUPINFO si = { sizeof(si) };
-    PROCESS_INFORMATION pi;
-    
-    string cmdLine = "Creator.exe " + filename + " " + to_string(recordCount);
-    
-    cout << "\nStarting Creator process..." << endl;
-    cout << "Command: " << cmdLine << endl;
-    
-    if (!CreateProcess(NULL, (LPSTR)cmdLine.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-        cerr << "Failed to create Creator process. Error: " << GetLastError() << endl;
-        return 1;
+    if (filename.find(".txt") != std::string::npos) {
+        std::ifstream file(filename);
+        std::string line;
+        while (std::getline(file, line)) {
+            std::cout << line << std::endl;
+        }
     }
-    
-    cout << "Creator process started. PID: " << pi.dwProcessId << endl;
-    cout << "Waiting for Creator to complete..." << endl;
-    
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    
-    DWORD exitCode;
-    GetExitCodeProcess(pi.hProcess, &exitCode);
-    
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-    
-    cout << "Creator finished with exit code: " << exitCode << endl;
-    return exitCode;
-}
-
-int runReporter(const string& filename, const string& reportFile, double hourlyRate) {
-    STARTUPINFO si = { sizeof(si) };
-    PROCESS_INFORMATION pi;
-    
-    string cmdLine = "Reporter.exe " + filename + " " + reportFile + " " + to_string(hourlyRate);
-    
-    cout << "\nStarting Reporter process..." << endl;
-    cout << "Command: " << cmdLine << endl;
-    
-    if (!CreateProcess(NULL, (LPSTR)cmdLine.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-        cerr << "Failed to create Reporter process. Error: " << GetLastError() << endl;
-        return 1;
+    else {
+        try {
+            auto employees = FileHandler::readBinaryFile(filename);
+            for (const auto& emp : employees) {
+                std::cout << "ID: " << emp.num
+                    << ", Name: " << emp.getName()
+                    << ", Hours: " << emp.hours << std::endl;
+            }
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error reading file: " << e.what() << std::endl;
+        }
     }
-    
-    cout << "Reporter process started. PID: " << pi.dwProcessId << endl;
-    cout << "Waiting for Reporter to complete..." << endl;
-    
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    
-    DWORD exitCode;
-    GetExitCodeProcess(pi.hProcess, &exitCode);
-    
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-    
-    cout << "Reporter finished with exit code: " << exitCode << endl;
-    return exitCode;
 }
-#else
-int runCreator(const string& filename, int recordCount) {
-    string createCmd = "./Creator.exe " + filename + " " + to_string(recordCount);
-    cout << "\nStarting Creator..." << endl;
-    return system(createCmd.c_str());
-}
-
-int runReporter(const string& filename, const string& reportFile, double hourlyRate) {
-    string reportCmd = "./Reporter.exe " + filename + " " + 
-                       reportFile + " " + to_string(hourlyRate);
-    cout << "\nStarting Reporter..." << endl;
-    return system(reportCmd.c_str());
-}
-#endif
 
 int main() {
     try {
-        clearScreen();
-        
-        cout << "=== Employee Records System ===" << endl;
-        cout << "Version 1.0" << endl;
-        cout << string(30, '=') << endl;
-        
-        string filename;
-        cout << "\nEnter filename for binary data: ";
-        cin >> filename;
-        cin.ignore(256, '\n');
-        
-        int recordCount = getValidatedInt("Enter number of employees: ", 
-                                         MIN_RECORDS, MAX_RECORDS);
-        
-        int creatorResult = runCreator(filename, recordCount);
-        
-        if (creatorResult == 0) {
-            cout << "\n✓ Creator finished successfully!" << endl;
-            
-            printBinaryFile(filename);
-            
-            string reportFile;
-            cout << "Enter report file name: ";
-            cin >> reportFile;
-            cin.ignore(256, '\n');
-            
-            double hourlyRate = getValidatedDouble("Enter hourly rate: ", 
-                                                  MIN_RATE, MAX_RATE);
-            
-            int reporterResult = runReporter(filename, reportFile, hourlyRate);
-            
-            if (reporterResult == 0) {
-                cout << "\n✓ Reporter finished successfully!" << endl;
-                
-                printReportFile(reportFile);
-                
-                cout << "\n✓ Program completed successfully!" << endl;
-            } else {
-                cerr << "\n✗ Reporter failed with code: " << reporterResult << endl;
-                return reporterResult;
-            }
-        } else {
-            cerr << "\n✗ Creator failed with code: " << creatorResult << endl;
-            return creatorResult;
+        std::cout << "=== Employee Records System ===" << std::endl;
+        std::cout << "Version 2.0" << std::endl;
+
+        std::string filename = InputValidator::getName("\nBinary filename: ");
+        int count = InputValidator::getInt("Number of employees: ", 1, MAX_EMPLOYEES);
+
+        // Ensure filename has path
+        if (filename.find('/') == std::string::npos) {
+            filename = "data/" + filename;
         }
-        
-    } catch (const std::exception& e) {
-        cerr << "Unexpected error: " << e.what() << endl;
+        FileHandler::createDirectory("data");
+
+        int result = ProcessLauncher::runCreator(filename, count);
+
+        if (result == 0) {
+            std::cout << "\n✓ Creator completed successfully!" << std::endl;
+            printFileContent(filename);
+
+            std::string reportFile = InputValidator::getName("\nReport filename: ");
+            double rate = InputValidator::getDouble("Hourly rate: ",
+                MIN_HOURLY_RATE,
+                MAX_HOURLY_RATE);
+
+            if (reportFile.find('/') == std::string::npos) {
+                reportFile = "reports/" + reportFile;
+            }
+            FileHandler::createDirectory("reports");
+
+            result = ProcessLauncher::runReporter(filename, reportFile, rate);
+
+            if (result == 0) {
+                std::cout << "\n✓ Reporter completed successfully!" << std::endl;
+                printFileContent(reportFile);
+                std::cout << "\n✓ All operations completed successfully!" << std::endl;
+            }
+        }
+
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
-    
+
     return 0;
 }

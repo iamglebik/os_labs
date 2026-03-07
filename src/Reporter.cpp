@@ -1,133 +1,88 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <memory>
-#include <iomanip>
-#include <stdexcept>
+﻿#include <iostream>
 #include "employee.h"
+#include "FileHandler.h"
+#include "ReportGenerator.h"
+#include "InputValidator.h"
 
-using std::cout;
-using std::cin;
-using std::cerr;
-using std::endl;
-using std::string;
-using std::ifstream;
-using std::ofstream;
-using std::vector;
-using std::setw;
-using std::left;
-using std::fixed;
-using std::setprecision;
+class ReportProcessor {
+private:
+    std::vector<Employee> employees;
+    double hourlyRate{ 0.0 };
 
-static constexpr int TABLE_WIDTH = 50;
-static constexpr int ID_WIDTH = 8;
-static constexpr int NAME_WIDTH = 12;
-static constexpr int HOURS_WIDTH = 10;
-static constexpr int SALARY_WIDTH = 12;
-
-vector<Employee> readEmployeesFromFile(const string& filename) {
-    vector<Employee> employees;
-    ifstream file(filename, std::ios::binary);
-    
-    if (!file.is_open()) {
-        throw std::runtime_error("Cannot open file: " + filename);
+public:
+    bool loadData(const std::string& filename) {
+        try {
+            employees = FileHandler::readBinaryFile(filename);
+            return true;
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error loading data: " << e.what() << std::endl;
+            return false;
+        }
     }
-    
-    Employee emp;
-    while (file.read(reinterpret_cast<char*>(&emp), sizeof(Employee))) {
-        employees.push_back(emp);
-    }
-    
-    if (file.bad()) {
-        throw std::runtime_error("Error reading file: " + filename);
-    }
-    
-    return employees;
-}
 
-void printReportHeader(const string& filename) {
-    cout << "\n" << string(TABLE_WIDTH, '=') << endl;
-    cout << "Report for file: " << filename << endl;
-    cout << string(TABLE_WIDTH, '=') << endl;
-    
-    cout << left 
-         << setw(ID_WIDTH) << "ID"
-         << setw(NAME_WIDTH) << "Name"
-         << setw(HOURS_WIDTH) << "Hours"
-         << setw(SALARY_WIDTH) << "Salary" << endl;
-    cout << string(TABLE_WIDTH, '-') << endl;
-}
-
-void printEmployeeReport(const Employee& emp, double hourlyRate) {
-    double salary = emp.hours * hourlyRate;
-    
-    cout << left
-         << setw(ID_WIDTH) << emp.num
-         << setw(NAME_WIDTH) << emp.name
-         << setw(HOURS_WIDTH) << fixed << setprecision(1) << emp.hours
-         << "$" << fixed << setprecision(2) << salary << endl;
-}
-
-void writeReportToFile(const string& filename, const vector<Employee>& employees, 
-                      double hourlyRate) {
-    ofstream file(filename);
-    
-    if (!file.is_open()) {
-        throw std::runtime_error("Cannot create report file: " + filename);
+    void setHourlyRate(double rate) {
+        if (rate < MIN_HOURLY_RATE || rate > MAX_HOURLY_RATE) {
+            throw std::invalid_argument("Invalid hourly rate");
+        }
+        hourlyRate = rate;
     }
-    
-    file << "Report for file: test_data/test.bin" << endl;
-    file << "ID, Name, Hours, Salary" << endl;
-    
-    for (const auto& emp : employees) {
-        double salary = emp.hours * hourlyRate;
-        file << emp.num << ", " << emp.name << ", " 
-             << emp.hours << ", " << static_cast<int>(salary) << endl;
+
+    void generateReport(const std::string& reportFile) {
+        if (employees.empty()) {
+            std::cout << "Warning: No employees to report." << std::endl;
+        }
+
+        std::cout << "\n=== Employee Report ===" << std::endl;
+        ReportGenerator::printToConsole(employees, hourlyRate);
+
+        try {
+            ReportGenerator::writeToFile(reportFile, employees, hourlyRate);
+            std::cout << "\n✓ Report saved to: " << reportFile << std::endl;
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error saving report: " << e.what() << std::endl;
+            throw;
+        }
     }
-    
-    file.close();
-}
+};
 
 int main(int argc, char* argv[]) {
     try {
-        string binaryFile;
-        string reportFile;
+        std::string binaryFile, reportFile;
         double hourlyRate;
 
         if (argc == 4) {
             binaryFile = argv[1];
             reportFile = argv[2];
             hourlyRate = std::stod(argv[3]);
-        } else {
-            cout << "=== Report Generator ===" << endl;
-            cout << "Enter binary file name: ";
-            cin >> binaryFile;
-            cout << "Enter report file name: ";
-            cin >> reportFile;
-            cout << "Enter hourly rate: ";
-            cin >> hourlyRate;
+        }
+        else {
+            std::cout << "=== Report Generator ===" << std::endl;
+            binaryFile = InputValidator::getName("Binary file name: ");
+            reportFile = InputValidator::getName("Report file name: ");
+            hourlyRate = InputValidator::getDouble("Hourly rate: ",
+                MIN_HOURLY_RATE,
+                MAX_HOURLY_RATE);
         }
 
-        auto employees = readEmployeesFromFile(binaryFile);
-        
-        if (employees.empty()) {
-            cout << "Warning: No employee records found in file." << endl;
+        FileHandler::createDirectory("reports");
+        if (reportFile.find('/') == std::string::npos) {
+            reportFile = "reports/" + reportFile;
         }
 
-        printReportHeader(binaryFile);
-        
-        for (const auto& emp : employees) {
-            printEmployeeReport(emp, hourlyRate);
+        ReportProcessor processor;
+
+        if (!processor.loadData(binaryFile)) {
+            return 1;
         }
-        
-        writeReportToFile(reportFile, employees, hourlyRate);
-        
-        cout << string(TABLE_WIDTH, '-') << endl;
-        cout << "Report created successfully: " << reportFile << endl;
-        
-    } catch (const std::exception& e) {
-        cerr << "Error: " << e.what() << endl;
+
+        processor.setHourlyRate(hourlyRate);
+        processor.generateReport(reportFile);
+
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 
