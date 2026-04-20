@@ -16,12 +16,17 @@
 |-------|---------------------|--------|
 | [`feature-lab1`](https://github.com/iamglebik/os_labs/tree/feature-lab1) | Лабораторная работа №1 — Создание процессов | ✅ Выполнено |
 | [`feature-lab2`](https://github.com/iamglebik/os_labs/tree/feature-lab2) | Лабораторная работа №2 — Создание потоков | ✅ Выполнено |
+| [`feature-lab3`](https://github.com/iamglebik/os_labs/tree/feature-lab3) | Лабораторная работа №3 — Синхронизация потоков | ✅ Выполнено |
+| [`feature-lab4`](https://github.com/iamglebik/os_labs/tree/feature-lab4) | Лабораторная работа №4 — Синхронизация процессов | ✅ Выполнено |
+| [`feature-lab5`](https://github.com/iamglebik/os_labs/tree/feature-lab5) | Лабораторная работа №5 — Обмен данными по именованным каналам | ✅ Выполнено |
 
 ---
 
 ## 🔬 Лабораторная работа №1 — Создание процессов
 
 Разработка программы `Main` и утилит `Creator` и `Reporter` с использованием WinAPI для создания процессов и ожидания их завершения через `WaitForSingleObject`.
+
+**Технологии:** C++17, WinAPI Processes, Google Test, CMake
 
 [Перейти к коду →](https://github.com/iamglebik/os_labs/tree/feature-lab1)
 
@@ -31,14 +36,50 @@
 
 Многопоточная обработка массива целых чисел с использованием WinAPI. Поиск минимума/максимума и среднего значения в отдельных потоках с синхронизацией через `WaitForSingleObject`.
 
+**Технологии:** C++11, WinAPI Threads, Google Test, CMake
+
 [Перейти к коду →](https://github.com/iamglebik/os_labs/tree/feature-lab2)
 
 ---
 
-## 📞 Контакты
+## 🔒 Лабораторная работа №3 — Синхронизация потоков
 
-**Автор:** Синяков Глеб Максимович  
-**GitHub:** [iamglebik](https://github.com/iamglebik)
+Синхронизация потоков при помощи критических секций и событий. Потоки `marker` помечают элементы массива, поток `main` управляет их работой и завершением.
+
+**Технологии:** C++17, `std::thread`, `std::mutex`, `std::condition_variable`, Google Test, CMake
+
+[Перейти к коду →](https://github.com/iamglebik/os_labs/tree/feature-lab3)
 
 ---
-*© 2024, БГУ, ФПМИ, кафедра технологии программирования*
+
+## 📡 Лабораторная работа №4 — Синхронизация процессов
+
+Передача сообщений между процессами через общий бинарный файл. Кольцевая очередь FIFO, процессы `Receiver` и `Sender`, синхронизация через мьютексы и семафоры.
+
+**Технологии:** C++98, WinAPI Processes, Named Mutex/Semaphore/Event, File Mapping, Google Test, CMake
+
+[Перейти к коду →](https://github.com/iamglebik/os_labs/tree/feature-lab4)
+
+---
+
+## 🔌 Лабораторная работа №5 — Обмен данными по именованным каналам
+
+Клиент-серверная архитектура с использованием Named Pipes. Сервер управляет доступом к бинарному файлу с записями сотрудников, клиенты выполняют чтение и модификацию с Reader-Writer синхронизацией.
+
+**Технологии:** C++98 / C++23, WinAPI Named Pipes, Semaphores, Reader-Writer locks, Google Test, CMake
+
+[Перейти к коду →](https://github.com/iamglebik/os_labs/tree/feature-lab5)
+
+---
+
+## 🛠️ Технологии и инструменты
+
+| Технология | Назначение |
+|------------|------------|
+| **C++98 / C++11 / C++17 / C++23** | Язык программирования |
+| **WinAPI** | Процессы, потоки, синхронизация, именованные каналы |
+| **CMake** | Система сборки |
+| **Google Test** | Модульное тестирование |
+| **Boost** | Умные указатели для C++98 |
+
+---
