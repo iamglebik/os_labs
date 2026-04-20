@@ -1,0 +1,22 @@
+# Xcode
+*.xcodeproj/
+xcuserdata/
+*.xcworkspace/
+DerivedData/
+
+# Build files
+*.exe
+*.bin
+
+# Test reports (конкретные файлы)
+allure-report/
+test_results.xml
+report.txt
+test_*.txt
+
+# macOS
+.DS_Store
+
+# Build directories
+build/
+cmake-build-*/

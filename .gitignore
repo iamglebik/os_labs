@@ -1,0 +1,35 @@
+﻿# Лабораторная работа №1 — Создание процессов
+
+**Автор:** Синяков Глеб Максимович  
+**Группа:** 12  
+**Курс:** 2  
+
+## 📌 Постановка задачи
+Разработать консольную программу Main и две утилиты Creator и Reporter.
+
+## 🛠️ Структура проекта
+- Creator — создание бинарного файла с данными сотрудников
+- Reporter — генерация отчёта с зарплатами
+- Main — управление процессами через WinAPI
+
+## 📦 Сборка
+\\\ash
+mkdir build && cd build
+cmake ..
+cmake --build . --config Release
+\\\
+"@ | Out-File -FilePath "lab1\README.md" -Encoding utf8
+}
+
+# Добавим .gitignore в корень если его нет
+if (-not (Test-Path ".gitignore")) {
+    @"
+build/
+*/build/
+Debug/
+Release/
+_deps/
+*.exe
+*.obj
+.vs/
+.vscode/
