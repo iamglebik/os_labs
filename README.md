@@ -312,5 +312,5 @@ lab3_java/
 ## Ссылки
 
 - [Репозиторий с лабораторными работами](https://github.com/iamglebik/os_labs)
-- [Ветка C++ версии](https://github.com/iamglebik/os_labs/tree/feature-lab3)
-- [Ветка Java версии](https://github.com/iamglebik/os_labs/tree/feature-lab3-java)
+- [Папка C++ версии](https://github.com/iamglebik/os_labs/tree/feature-lab3/lab3-C%2B%2B)
+- [Папка Java версии](https://github.com/iamglebik/os_labs/tree/feature-lab3/lab3-java)
