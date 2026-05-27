@@ -67,9 +67,9 @@
 
 > За исключением синтаксического сахара и микро-нюансов с управлением памятью, код и его сложность оказались идентичными. Java-реализация получилась несколько лаконичнее за счёт встроенных средств синхронизации (`Phaser`), а C++ — более производительной и предсказуемой по времени.
 
-[Перейти к C++ версии →](https://github.com/iamglebik/os_labs/tree/feature-lab3)  
-[Перейти к Java версии →](https://github.com/iamglebik/os_labs/tree/feature-lab3-java)  
-[Подробный сравнительный анализ →](https://github.com/iamglebik/os_labs/blob/feature-lab3-java/README.md)
+[Перейти к C++ версии →](https://github.com/iamglebik/os_labs/tree/feature-lab3/lab3-C%2B%2B)  
+[Перейти к Java версии →](https://github.com/iamglebik/os_labs/tree/feature-lab3/lab3-java)  
+[Подробный сравнительный анализ →](https://github.com/iamglebik/os_labs/blob/feature-lab3/README.md)
 
 ---
 
